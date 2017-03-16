@@ -3533,14 +3533,14 @@ static void remapNearest( const Mat& _src, Mat& _dst, const Mat& _xy,
                           int borderType, const Scalar& _borderValue )
 {
     Size ssize = _src.size(), dsize = _dst.size();
-    int cn = _src.channels();
+    int k, cn = _src.channels();
     const T* S0 = _src.ptr<T>();
+    T cval[CV_CN_MAX];
     size_t sstep = _src.step/sizeof(S0[0]);
-    Scalar_<T> cval(saturate_cast<T>(_borderValue[0]),
-        saturate_cast<T>(_borderValue[1]),
-        saturate_cast<T>(_borderValue[2]),
-        saturate_cast<T>(_borderValue[3]));
     int dx, dy;
+
+    for( k = 0; k < cn; k++ )
+        cval[k] = saturate_cast<T>(_borderValue[k & 3]);
 
     unsigned width1 = ssize.width, height1 = ssize.height;
 
@@ -3585,7 +3585,7 @@ static void remapNearest( const Mat& _src, Mat& _dst, const Mat& _xy,
         {
             for( dx = 0; dx < dsize.width; dx++, D += cn )
             {
-                int sx = XY[dx*2], sy = XY[dx*2+1], k;
+                int sx = XY[dx*2], sy = XY[dx*2+1];
                 const T *S;
                 if( (unsigned)sx < width1 && (unsigned)sy < height1 )
                 {
@@ -4064,16 +4064,17 @@ static void remapBicubic( const Mat& _src, Mat& _dst, const Mat& _xy,
     typedef typename CastOp::rtype T;
     typedef typename CastOp::type1 WT;
     Size ssize = _src.size(), dsize = _dst.size();
-    int cn = _src.channels();
+    int k, cn = _src.channels();
     const AT* wtab = (const AT*)_wtab;
     const T* S0 = _src.ptr<T>();
     size_t sstep = _src.step/sizeof(S0[0]);
-    Scalar_<T> cval(saturate_cast<T>(_borderValue[0]),
-        saturate_cast<T>(_borderValue[1]),
-        saturate_cast<T>(_borderValue[2]),
-        saturate_cast<T>(_borderValue[3]));
+    T cval[CV_CN_MAX];
     int dx, dy;
     CastOp castOp;
+
+    for( k = 0; k < cn; k++ )
+        cval[k] = saturate_cast<T>(_borderValue[k & 3]);
+
     int borderType1 = borderType != BORDER_TRANSPARENT ? borderType : BORDER_REFLECT_101;
 
     unsigned width1 = std::max(ssize.width-3, 0), height1 = std::max(ssize.height-3, 0);
@@ -4094,7 +4095,7 @@ static void remapBicubic( const Mat& _src, Mat& _dst, const Mat& _xy,
         {
             int sx = XY[dx*2]-1, sy = XY[dx*2+1]-1;
             const AT* w = wtab + FXY[dx]*16;
-            int i, k;
+            int i;
             if( (unsigned)sx < width1 && (unsigned)sy < height1 )
             {
                 const T* S = S0 + sy*sstep + sx*cn;
@@ -4169,16 +4170,17 @@ static void remapLanczos4( const Mat& _src, Mat& _dst, const Mat& _xy,
     typedef typename CastOp::rtype T;
     typedef typename CastOp::type1 WT;
     Size ssize = _src.size(), dsize = _dst.size();
-    int cn = _src.channels();
+    int k, cn = _src.channels();
     const AT* wtab = (const AT*)_wtab;
     const T* S0 = _src.ptr<T>();
     size_t sstep = _src.step/sizeof(S0[0]);
-    Scalar_<T> cval(saturate_cast<T>(_borderValue[0]),
-        saturate_cast<T>(_borderValue[1]),
-        saturate_cast<T>(_borderValue[2]),
-        saturate_cast<T>(_borderValue[3]));
+    T cval[CV_CN_MAX];
     int dx, dy;
     CastOp castOp;
+
+    for( k = 0; k < cn; k++ )
+        cval[k] = saturate_cast<T>(_borderValue[k & 3]);
+
     int borderType1 = borderType != BORDER_TRANSPARENT ? borderType : BORDER_REFLECT_101;
 
     unsigned width1 = std::max(ssize.width-7, 0), height1 = std::max(ssize.height-7, 0);
@@ -4200,7 +4202,7 @@ static void remapLanczos4( const Mat& _src, Mat& _dst, const Mat& _xy,
             int sx = XY[dx*2]-3, sy = XY[dx*2+1]-3;
             const AT* w = wtab + FXY[dx]*64;
             const T* S = S0 + sy*sstep + sx*cn;
-            int i, k;
+            int i;
             if( (unsigned)sx < width1 && (unsigned)sy < height1 )
             {
                 for( k = 0; k < cn; k++ )
